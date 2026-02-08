@@ -27,7 +27,7 @@ Namespace StoryHub
         Private Class Story
             Public Property Id As Guid
             Public Property Title As String
-            Public Property Category As String
+
             Public Property Text As String
             Public Property Author As String
             Public Property VideoUrl As String
@@ -59,86 +59,141 @@ Namespace StoryHub
             Public Property Comments As List(Of CommentVm)
         End Class
 
+
+
+
+
+
+
+
+
+
         Protected Sub Page_Load(sender As Object, e As EventArgs) Handles Me.Load
             If Not IsPostBack Then
-                EnsureSeed()
 
-                ddlFilterCategory.SelectedValue = ""
+                ' 1) Priorité: Session
+                Dim u As String = TryCast(Session("UserName"), String)
+                If Not String.IsNullOrWhiteSpace(u) Then
+                    hfUserName.Value = u
+                    tbUserName.Text = u
+                End If
+                ' 2) Sinon: Cookie
+                If String.IsNullOrWhiteSpace(u) Then
+                    Dim c = Request.Cookies("sh_user")
+                    If c IsNot Nothing Then
+                        u = c.Value.Trim()
+                    End If
+                End If
+                ' Normalise/valide léger (même règle que client)
+                u = NormalizeUser(u)
 
+                If Not String.IsNullOrWhiteSpace(u) Then
+                    ' Remplir les champs de la page
+                    hfUserName.Value = u
+                    tbUserName.Text = u
+
+                    ' 3) Restaure la Session côté serveur via ton service ASMX
+                    ' (utile si l'utilisateur a juste un cookie mais pas de session)
+                    Try
+                        Dim svc As New prjLeo.Leo()
+                        Dim res = svc.SetUserName(u) ' storyId = username
+                        ' Optionnel: tu peux tester res.ok, mais pas nécessaire ici
+                    Catch
+                        ' Si ça échoue, on laisse le cookie faire son job côté client (popup/JS)
+                    End Try
+
+                    ' 4) Re-synchronise la session locale (au cas où)
+                    If String.IsNullOrWhiteSpace(TryCast(Session("UserName"), String)) Then
+                        Session("UserName") = u
+                    End If
+                End If
                 Session(SESSION_SORT) = "recent"
                 SetSortButtons(isRecent:=True)
-                BindCategories()
+                'BindCategories()
 
                 BindStories()
             End If
         End Sub
+        Private Function NormalizeUser(input As String) As String
+            If String.IsNullOrWhiteSpace(input) Then Return ""
+            Dim u As String = input.Trim()
+            If u.Length > 30 Then u = u.Substring(0, 30)
 
+            Dim chars As New System.Text.StringBuilder()
+            For Each ch As Char In u
+                Dim ok As Boolean =
+                    Char.IsLetterOrDigit(ch) OrElse ch = "_"c OrElse ch = "-"c OrElse ch = "."c
+                If ok Then chars.Append(ch)
+            Next
 
-        Sub BindCategories()
-            SetDDL(ddlCategory, "Name", "Id", "s0007GetCategories")
-            SetDDL(ddlFilterCategory, "Name", "Id", "s0008GetFilterCategories")
+            Return chars.ToString()
+        End Function
 
-        End Sub
+        'Sub BindCategories()
+        '    SetDDL(ddlCategory, "Name", "Id", "s0007GetCategories")
+        '    SetDDL(ddlFilterCategory, "Name", "Id", "s0008GetFilterCategories")
+
+        'End Sub
 
 
         ' -----------------------------
         ' Seed / Storage (Session)
         ' -----------------------------
-        Private Sub EnsureSeed()
-            Dim stories = TryCast(Session(SESSION_STORIES), List(Of Story))
-            If stories IsNot Nothing Then Return
+        'Private Sub EnsureSeed()
+        '    Dim stories = TryCast(Session(SESSION_STORIES), List(Of Story))
+        '    If stories IsNot Nothing Then Return
 
-            stories = New List(Of Story) From {
-                New Story With {
-                    .Id = Guid.NewGuid(),
-                    .Title = "Le voyage intemporel",
-                    .Category = "Science-Fiction",
-                    .Text = "Une porte s'ouvre sur une époque oubliée...",
-                    .Author = "@AlexWriter",
-                    .VideoUrl = Nothing,
-                    .Votes = 342,
-                    .Likes = 4,
-                    .Dislikes = 8,
-                    .CreatedAt = DateTime.UtcNow.AddHours(-10),
-                    .Comments = New List(Of Comment) From {
-                        New Comment With {.Id = Guid.NewGuid(), .Name = "Marie", .Email = "marie@example.com", .Text = "Vraiment captivant!", .CreatedAt = DateTime.UtcNow.AddHours(-2)}
-                    }
-                },
-                New Story With {
-                    .Id = Guid.NewGuid(),
-                    .Title = "Les secrets de la forêt",
-                    .Category = "Aventure",
-                    .Text = "La brume cache des murmures anciens...",
-                    .Author = "@Marie_L",
-                    .VideoUrl = Nothing,
-                    .Votes = 298,
-                    .Likes = 1,
-                    .Dislikes = 0,
-                    .CreatedAt = DateTime.UtcNow.AddDays(-1),
-                    .Comments = New List(Of Comment)()
-                },
-                New Story With {
-                    .Id = Guid.NewGuid(),
-                    .Title = "Au-delà des étoiles",
-                    .Category = "Fantasy",
-                    .Text = "Un royaume suspendu entre deux constellations...",
-                    .Author = "@Cosmos99",
-                    .VideoUrl = Nothing,
-                    .Votes = 276,
-                    .Likes = 2,
-                    .Dislikes = 1,
-                    .CreatedAt = DateTime.UtcNow.AddDays(-3),
-                    .Comments = New List(Of Comment)()
-                }
-            }
+        '    stories = New List(Of Story) From {
+        '        New Story With {
+        '            .Id = Guid.NewGuid(),
+        '            .Title = "Le voyage intemporel",
+        '            .Category = "Science-Fiction",
+        '            .Text = "Une porte s'ouvre sur une époque oubliée...",
+        '            .Author = "@AlexWriter",
+        '            .VideoUrl = Nothing,
+        '            .Votes = 342,
+        '            .Likes = 4,
+        '            .Dislikes = 8,
+        '            .CreatedAt = DateTime.UtcNow.AddHours(-10),
+        '            .Comments = New List(Of Comment) From {
+        '                New Comment With {.Id = Guid.NewGuid(), .Name = "Marie", .Email = "marie@example.com", .Text = "Vraiment captivant!", .CreatedAt = DateTime.UtcNow.AddHours(-2)}
+        '            }
+        '        },
+        '        New Story With {
+        '            .Id = Guid.NewGuid(),
+        '            .Title = "Les secrets de la forêt",
+        '            .Category = "Aventure",
+        '            .Text = "La brume cache des murmures anciens...",
+        '            .Author = "@Marie_L",
+        '            .VideoUrl = Nothing,
+        '            .Votes = 298,
+        '            .Likes = 1,
+        '            .Dislikes = 0,
+        '            .CreatedAt = DateTime.UtcNow.AddDays(-1),
+        '            .Comments = New List(Of Comment)()
+        '        },
+        '        New Story With {
+        '            .Id = Guid.NewGuid(),
+        '            .Title = "Au-delà des étoiles",
+        '            .Category = "Fantasy",
+        '            .Text = "Un royaume suspendu entre deux constellations...",
+        '            .Author = "@Cosmos99",
+        '            .VideoUrl = Nothing,
+        '            .Votes = 276,
+        '            .Likes = 2,
+        '            .Dislikes = 1,
+        '            .CreatedAt = DateTime.UtcNow.AddDays(-3),
+        '            .Comments = New List(Of Comment)()
+        '        }
+        '    }
 
-            Session(SESSION_STORIES) = stories
-        End Sub
+        '    Session(SESSION_STORIES) = stories
+        'End Sub
 
-        Private Function GetStories() As List(Of Story)
-            EnsureSeed()
-            Return DirectCast(Session(SESSION_STORIES), List(Of Story))
-        End Function
+        'Private Function GetStories() As List(Of Story)
+        '    EnsureSeed()
+        '    Return DirectCast(Session(SESSION_STORIES), List(Of Story))
+        'End Function
 
         ' -----------------------------
         ' UI Events
@@ -147,20 +202,32 @@ Namespace StoryHub
             lblMsg.CssClass = "msg"
             lblMsg.Text = ""
 
+            Dim u As String = TryCast(Session("UserName"), String)
+            If String.IsNullOrWhiteSpace(u) Then
+                lblMsg.CssClass = "msg err"
+                lblMsg.Text = "Username required."
+                Return
+            End If
+
+            ' Option: forcer l'auteur du post
+            tbUserName.Text = u
+
+
+
             Dim title = tbTitle.Text
-            Dim category = ddlCategory.SelectedValue
-            Dim text = tbStory.Text
+            'Dim category = ddlCategory.SelectedValue
+            Dim text = tbStoryLong.Text
             Dim email = tbUserName.Text
 
-            If title = "" OrElse text = "" Then
+            If text = "" Then
                 lblMsg.CssClass = "msg err"
-                lblMsg.Text = "Title and story are required."
+                lblMsg.Text = "Story are required."
                 Return
             End If
 
             Dim MyParam As New Collection
             MyParam.Add(New Data.SqlClient.SqlParameter("@Title", title))
-            MyParam.Add(New Data.SqlClient.SqlParameter("@category", category))
+
             MyParam.Add(New Data.SqlClient.SqlParameter("@text", text))
             MyParam.Add(New Data.SqlClient.SqlParameter("@email", email))
 
@@ -190,18 +257,17 @@ Namespace StoryHub
             'Session(SESSION_STORIES) = stories
 
             tbTitle.Text = ""
-            tbStory.Text = ""
+            tbStoryLong.Text = ""
 
 
             lblMsg.CssClass = "msg ok"
             lblMsg.Text = "Published story ✅"
+            lblMsg.Text = ""
 
             BindStories()
         End Sub
 
-        Protected Sub ddlFilterCategory_SelectedIndexChanged(sender As Object, e As EventArgs)
-            BindStories()
-        End Sub
+
 
         Protected Sub btnSortRecent_Click(sender As Object, e As EventArgs)
             Session(SESSION_SORT) = "recent"
@@ -231,21 +297,21 @@ Namespace StoryHub
             Dim storyId As Guid
             If Not Guid.TryParse(Convert.ToString(e.CommandArgument), storyId) Then Return
 
-            Dim stories = GetStories()
-            Dim s = stories.FirstOrDefault(Function(x) x.Id = storyId)
-            If s Is Nothing Then Return
+            'Dim stories = GetStories()
+            'Dim s = stories.FirstOrDefault(Function(x) x.Id = storyId)
+            'If s Is Nothing Then Return
 
-            Dim cmd = (e.CommandName Or "")
+            'Dim cmd = (e.CommandName Or "")
 
-            Select Case cmd
-                Case "vote"
-                    s.Votes += 1
+            'Select Case cmd
+            '    Case "vote"
+            '        s.Votes += 1
 
-                Case "add_comment"
-                    AddCommentFromRepeaterItem(sender, s)
-            End Select
+            '    Case "add_comment"
+            '        AddCommentFromRepeaterItem(sender, s)
+            'End Select
 
-            Session(SESSION_STORIES) = stories
+            'Session(SESSION_STORIES) = stories
             BindStories()
         End Sub
 
@@ -321,7 +387,7 @@ Namespace StoryHub
 
 
             Dim MyParam As New Collection
-            MyParam.Add(New Data.SqlClient.SqlParameter("@FilterCategory", ddlFilterCategory.SelectedValue))
+
             MyParam.Add(New Data.SqlClient.SqlParameter("@recent", recent))
 
 
@@ -404,12 +470,7 @@ Namespace StoryHub
         ' -----------------------------
         ' Helpers
         ' -----------------------------
-        Private Function CategoryToPillClass(cat As String) As String
-            Dim c As String = cat
-            If c.Contains("aventure") OrElse c.Contains("science") Then Return "blue"
-            If c.Contains("romance") OrElse c.Contains("comédie") Then Return "pink"
-            Return "purple"
-        End Function
+
 
         Private Function ToRelativeTime(createdUtc As DateTime, nowUtc As DateTime) As String
             Dim span = nowUtc - createdUtc
@@ -558,6 +619,17 @@ Namespace StoryHub
 
         Protected Sub Comment_Command(sender As Object, e As CommandEventArgs)
             If e.CommandName <> "addComment" Then Return
+
+            Dim u As String = TryCast(Session("UserName"), String)
+            If String.IsNullOrWhiteSpace(u) Then
+                lblMsg.CssClass = "msg err"
+                lblMsg.Text = "Username required."
+                Return
+            End If
+
+            ' Option: forcer l'auteur du post
+            tbUserName.Text = u
+
 
             Dim storyId As Guid
             If Not Guid.TryParse(CStr(e.CommandArgument), storyId) Then Return

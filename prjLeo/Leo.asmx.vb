@@ -66,18 +66,51 @@ Namespace prjLeo
             Public Property [error] As String
         End Class
 
-        <WebMethod()>
+        <WebMethod(EnableSession:=True)>
+        <ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
+        Public Function SetUserName(storyId As String) As Object
+            Dim u As String = (If(storyId, "")).Trim()
+
+            If u.Length = 0 Then Return New With {.ok = False, .error = "Username required."}
+            If u.Length > 30 Then u = u.Substring(0, 30)
+
+            ' Only safe chars: letters, numbers, . _ -
+            For Each ch As Char In u
+                Dim ok As Boolean =
+                    Char.IsLetterOrDigit(ch) OrElse ch = "_"c OrElse ch = "-"c OrElse ch = "."c
+                If Not ok Then
+                    Return New With {.ok = False, .error = "Only letters, numbers, . _ - are allowed."}
+                End If
+            Next
+
+            ' Store in Session
+            Context.Session("UserName") = u
+
+            Return New With {.ok = True, .user = u}
+        End Function
+
+
+
+
+
+
+        <WebMethod(EnableSession:=True)>
         <ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
         Public Function DislikeStory(storyId As String) As VoteResult
             Try
 
                 Dim id As Guid = Guid.Parse(storyId)
+                Dim u As String = TryCast(Context.Session("UserName"), String)
+                If String.IsNullOrWhiteSpace(u) Then
+                    Return New VoteResult With {.ok = False, .error = "Username required."}
+                End If
+
 
 
                 Dim MyParam As New Collection
                 MyParam.Add(New Data.SqlClient.SqlParameter("@StoryGUID", id))
                 MyParam.Add(New Data.SqlClient.SqlParameter("@Direction", -1))
-                MyParam.Add(New Data.SqlClient.SqlParameter("@VoterId", "le voter"))
+                MyParam.Add(New Data.SqlClient.SqlParameter("@VoterId", u))
 
                 Dim Myds As DataSet = ExecuteSQLds("s0003Vote", MyParam)
 
@@ -97,17 +130,30 @@ Namespace prjLeo
             End Try
         End Function
 
-        <WebMethod()>
+        <WebMethod(EnableSession:=True)>
         <ScriptMethod(ResponseFormat:=ResponseFormat.Json)>
         Public Function likeStory(storyId As String) As VoteResult
             Try
 
                 Dim id As Guid = Guid.Parse(storyId)
 
+
+
+
+                Dim u As String = TryCast(Context.Session("UserName"), String)
+                If String.IsNullOrWhiteSpace(u) Then
+                    Return New VoteResult With {.ok = False, .error = "Username required."}
+                End If
+
+
+
                 Dim MyParam As New Collection
                 MyParam.Add(New Data.SqlClient.SqlParameter("@StoryGUID", id))
                 MyParam.Add(New Data.SqlClient.SqlParameter("@Direction", 1))
-                MyParam.Add(New Data.SqlClient.SqlParameter("@VoterId", "le voter"))
+                MyParam.Add(New Data.SqlClient.SqlParameter("@VoterId", u))
+
+
+
 
                 Dim Myds As DataSet = ExecuteSQLds("s0003Vote", MyParam)
 

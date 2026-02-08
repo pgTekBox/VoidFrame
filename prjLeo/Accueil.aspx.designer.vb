@@ -33,6 +33,15 @@ Namespace StoryHub
         Protected WithEvents ScriptManager1 As Global.System.Web.UI.ScriptManager
 
         '''<summary>
+        '''Contrôle hfUserName.
+        '''</summary>
+        '''<remarks>
+        '''Champ généré automatiquement.
+        '''Pour modifier, déplacez la déclaration de champ du fichier de concepteur dans le fichier code-behind.
+        '''</remarks>
+        Protected WithEvents hfUserName As Global.System.Web.UI.WebControls.HiddenField
+
+        '''<summary>
         '''Contrôle btnNavHome.
         '''</summary>
         '''<remarks>
@@ -69,15 +78,6 @@ Namespace StoryHub
         Protected WithEvents tbUserName As Global.System.Web.UI.WebControls.TextBox
 
         '''<summary>
-        '''Contrôle ddlCategory.
-        '''</summary>
-        '''<remarks>
-        '''Champ généré automatiquement.
-        '''Pour modifier, déplacez la déclaration de champ du fichier de concepteur dans le fichier code-behind.
-        '''</remarks>
-        Protected WithEvents ddlCategory As Global.System.Web.UI.WebControls.DropDownList
-
-        '''<summary>
         '''Contrôle tbTitle.
         '''</summary>
         '''<remarks>
@@ -87,13 +87,13 @@ Namespace StoryHub
         Protected WithEvents tbTitle As Global.System.Web.UI.WebControls.TextBox
 
         '''<summary>
-        '''Contrôle tbStory.
+        '''Contrôle tbStoryLong.
         '''</summary>
         '''<remarks>
         '''Champ généré automatiquement.
         '''Pour modifier, déplacez la déclaration de champ du fichier de concepteur dans le fichier code-behind.
         '''</remarks>
-        Protected WithEvents tbStory As Global.System.Web.UI.WebControls.TextBox
+        Protected WithEvents tbStoryLong As Global.System.Web.UI.WebControls.TextBox
 
         '''<summary>
         '''Contrôle btnPublish.
@@ -103,15 +103,6 @@ Namespace StoryHub
         '''Pour modifier, déplacez la déclaration de champ du fichier de concepteur dans le fichier code-behind.
         '''</remarks>
         Protected WithEvents btnPublish As Global.System.Web.UI.WebControls.Button
-
-        '''<summary>
-        '''Contrôle ddlFilterCategory.
-        '''</summary>
-        '''<remarks>
-        '''Champ généré automatiquement.
-        '''Pour modifier, déplacez la déclaration de champ du fichier de concepteur dans le fichier code-behind.
-        '''</remarks>
-        Protected WithEvents ddlFilterCategory As Global.System.Web.UI.WebControls.DropDownList
 
         '''<summary>
         '''Contrôle btnSortRecent.

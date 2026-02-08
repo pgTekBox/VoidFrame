@@ -34,10 +34,10 @@ Public Class clsData
     End Function
 
     Public Function ExecuteSQLds(ByVal SQLStatement As String, AllParameters As Collection) As DataSet
-        Try
 
 
-            Dim DRconn As SqlClient.SqlConnection
+
+        Dim DRconn As SqlClient.SqlConnection
             DRconn = New SqlClient.SqlConnection(ConnectionString)
             Dim MyDA As New SqlClient.SqlDataAdapter
 
@@ -54,9 +54,7 @@ Public Class clsData
             Dim oDs As New DataSet
             MyDA.Fill(oDs)
             Return oDs
-        Catch ex As Exception
-            Return Nothing
-        End Try
+
     End Function
 
     Sub SetDDL(ByVal oDDL As System.Web.UI.WebControls.DropDownList, ByVal DisplayName As String, ByVal KeyField As String, ByVal SQLStatement As String)

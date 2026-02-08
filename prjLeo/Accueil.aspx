@@ -103,15 +103,6 @@
         .hero h2 { margin: 0 0 10px 0; font-size: 40px; font-weight: 800; }
         .hero p { margin: 0 0 16px 0; font-size: 18px; color: rgba(255,255,255,.92); }
 
-        .hero-row {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 20px;
-            font-weight: 700;
-        }
-        .hero-icon { width: 40px; height: 40px; color: #4ade80; }
-
         /* Cards */
         .card { background: #fff; border: 1px solid var(--gray-200); border-radius: 14px; box-shadow: var(--shadow-md); }
         .card-pad { padding: 22px; }
@@ -164,6 +155,8 @@
         }
         .btn.primary { width: 100%; background: #a78bfa; color: #fff; }
         .btn.primary:hover { background: #8b5cf6; }
+        .btn.secondary { background: var(--gray-100); color: var(--gray-700); }
+        .btn.secondary:hover { background: var(--gray-200); }
 
         .msg { margin-top: 10px; font-size: 13px; color: var(--gray-600); }
         .msg.ok { color: #047857; }
@@ -179,9 +172,6 @@
             margin: 18px 0;
         }
         @media (min-width: 640px) { .filterbar { flex-direction: row; align-items: center; } }
-
-        .filter-left { display: flex; align-items: center; gap: 10px; }
-        .filter-icon { width: 20px; height: 20px; color: var(--gray-600); }
 
         .seg { display: flex; gap: 10px; }
         .seg .segbtn {
@@ -268,19 +258,86 @@
         }
 
         .mt-16 { margin-top: 16px; }
+
+        /* --- USERNAME MODAL --- */
+        .modal-backdrop{
+            position: fixed;
+            inset: 0;
+            background: rgba(17,24,39,.55);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 16px;
+        }
+        .modal{
+            width: min(520px, 100%);
+            background: #fff;
+            border: 1px solid var(--gray-200);
+            border-radius: 16px;
+            box-shadow: var(--shadow-xl);
+            overflow: hidden;
+        }
+        .modal-head{
+            padding: 16px 18px;
+            border-bottom: 1px solid var(--gray-200);
+            font-weight: 900;
+            font-size: 16px;
+            color: var(--gray-900);
+            background: var(--gray-50);
+        }
+        .modal-body{
+            padding: 18px;
+        }
+        .modal-actions{
+            display:flex;
+            justify-content:flex-end;
+            gap: 10px;
+            padding: 14px 18px;
+            border-top: 1px solid var(--gray-200);
+            background: #fff;
+        }
+        .small-hint{
+            margin-top: 8px;
+            font-size: 12px;
+            color: var(--gray-600);
+        }
     </style>
 </head>
 
 <body>
 <form id="form1" runat="server">
 
-    <asp:ScriptManager ID="ScriptManager1" runat="server" EnablePageMethods="true" />
-    <script type="text/javascript">
-        // IMPORTANT: FriendlyUrls changes the URL; force the real endpoint
-        if (typeof PageMethods !== "undefined" && PageMethods.set_path) {
-            PageMethods.set_path("<%= ResolveUrl("~/Accueil.aspx") %>");
-        }
-    </script>
+    <asp:ScriptManager ID="ScriptManager1" runat="server"  />
+
+    
+
+    <!-- Username required (server-side state) -->
+    <asp:HiddenField ID="hfUserName" runat="server" />
+
+    <!-- Modal Username -->
+    <div id="usernameBackdrop" class="modal-backdrop" aria-hidden="true">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="usernameTitle">
+            <div class="modal-head" id="usernameTitle">Choose a username</div>
+
+            <div class="modal-body">
+                <div class="field">
+                    <label class="label" for="tbUserPrompt">Username</label>
+                    <input id="tbUserPrompt" class="input" type="text" maxlength="30"
+                           placeholder="e.g. PierreG" autocomplete="off" />
+                    <div class="small-hint">
+                        This username will be used to publish stories, votes and comments.
+                    </div>
+                </div>
+                <div id="userErr" class="msg err" style="display:none;"></div>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn secondary" onclick="clearUser()">Clear</button>
+                <button type="button" class="btn primary" style="width:auto;" onclick="saveUser()">Continue</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Header -->
     <header class="header">
@@ -305,16 +362,8 @@
 
         <!-- Hero -->
         <section class="hero gradient-bg">
-            <h2>Share your stories</h2>
-            <p>Join a community of passionate writers and share your best stories.</p>
-            <div class="hero-row">
-                <svg class="hero-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
-                    </path>
-                </svg>
-                <span>Become an author and win rewards</span>
-            </div>
+            <h2>Feed the void with your imagination</h2>
+            <p>The community votes. Top stories become VoidRender films.</p>
         </section>
 
         <!-- Story Submission -->
@@ -326,18 +375,10 @@
             <div class="mt-16">
                 <div class="grid-3">
 
-                    <div class="field">
+                    <!-- Hidden username textbox (kept for server-side compatibility) -->
+                    <div class="field" style="display:none;">
                         <label class="label" for="tbUserName">Username</label>
-                        <asp:TextBox ID="tbUserName" runat="server"
-                            CssClass="input"
-                            placeholder="Your username" />
-                    </div>
-
-                    <div class="field">
-                        <label class="label" for="ddlCategory">Category</label>
-                        <asp:DropDownList ID="ddlCategory"
-                            runat="server"
-                            CssClass="select" />
+                        <asp:TextBox ID="tbUserName" runat="server" CssClass="input" />
                     </div>
 
                     <div class="field">
@@ -348,11 +389,13 @@
                             placeholder="Enter a catchy title..." />
                     </div>
 
+                    
+
                 </div>
 
                 <div class="field">
-                    <label class="label" for="tbStory">Your story</label>
-                    <asp:TextBox ID="tbStory" runat="server" CssClass="textarea" TextMode="MultiLine" Rows="6"
+                    <label class="label" for="tbStoryLong">Your story</label>
+                    <asp:TextBox ID="tbStoryLong" runat="server" CssClass="textarea" TextMode="MultiLine" Rows="6"
                         placeholder="Write your story here..." />
                 </div>
 
@@ -363,17 +406,7 @@
 
         <!-- Filter / Sort -->
         <section class="filterbar">
-            <div class="filter-left">
-                <svg class="filter-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M3 4a1 1 0 011-1h16a1 1 0 01.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z">
-                    </path>
-                </svg>
-
-                <asp:DropDownList ID="ddlFilterCategory" runat="server" CssClass="select" AutoPostBack="true"
-                    OnSelectedIndexChanged="ddlFilterCategory_SelectedIndexChanged" />
-            </div>
-
+            <div></div>
             <div class="seg">
                 <asp:Button ID="btnSortRecent" runat="server" CssClass="segbtn active" Text="Recent"
                     OnClick="btnSortRecent_Click" UseSubmitBehavior="false" />
@@ -390,15 +423,11 @@
                         <div class="story-row">
 
                             <div class="vote-col">
-                                <asp:Button ID="btnVoteUp" runat="server" CssClass="btn-vote"
-                                    Text="▲" CommandName="vote" CommandArgument='<%# Eval("Id") %>'
-                                    OnCommand="Story_Command" UseSubmitBehavior="false" />
                                 <div class="vote-num"><%# Eval("Votes") %></div>
                             </div>
 
                             <div style="flex: 1;">
                                 <div class="meta">
-                                    <span class='pill <%# Eval("PillClass") %>'><%# Eval("Category") %></span>
                                     <span class="by">by <b><%# Eval("Author") %></b></span>
                                     <span class="time">• <%# Eval("RelativeTime") %></span>
                                 </div>
@@ -462,11 +491,19 @@
                                     <!-- Add comment form -->
                                     <div style="background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: 12px; padding: 12px; margin-top: 12px;">
                                         <div class="grid-2">
-                                            <div class="field" style="margin-bottom: 0;">
+                                            <div  class ="field" style="display:none;margin-bottom: 0;">
                                                 <label class="label" for="tbCmtEmail">Name</label>
                                                 <asp:TextBox ID="tbCmtEmail" runat="server" CssClass="input" placeholder="Your name (optional)" />
                                             </div>
-                                            <div style="display:flex; justify-content:flex-end;">
+                                            
+                                        </div>
+
+                                        <div class="field" style="margin-top: 10px;">
+                                            <label class="label" for="tbCmtText">Your comment</label>
+                                            <asp:TextBox ID="tbCmtText" runat="server" CssClass="textarea" TextMode="MultiLine" Rows="1"
+                                                placeholder="Write your comment..." />
+                                        </div>
+<div style="display:flex; justify-content:flex-end;">
                                                 <asp:Button ID="btnAddComment" runat="server"
                                                     CssClass="btn primary" Style="width:auto;"
                                                     Text="Post"
@@ -475,14 +512,6 @@
                                                     OnCommand="Comment_Command"
                                                     UseSubmitBehavior="false" />
                                             </div>
-                                        </div>
-
-                                        <div class="field" style="margin-top: 10px;">
-                                            <label class="label" for="tbCmtText">Your comment</label>
-                                            <asp:TextBox ID="tbCmtText" runat="server" CssClass="textarea" TextMode="MultiLine" Rows="3"
-                                                placeholder="Write your comment..." />
-                                        </div>
-
                                         <asp:Label ID="lblCmtMsg" runat="server" CssClass="msg" EnableViewState="false" />
                                     </div>
 
@@ -572,6 +601,185 @@
                 setButtonsDisabled(container, false);
             }
         }
+    </script>
+
+    <!-- Username modal logic + guards -->
+    <script type="text/javascript">
+        function normalizeUser(u) {
+            if (!u) return "";
+            u = u.trim();
+            u = u.replace(/[^a-zA-Z0-9._-]/g, "");
+            return u.substring(0, 30);
+        }
+
+        function hasUser() {
+            const hf = document.getElementById("<%= hfUserName.ClientID %>");
+            return hf && hf.value && hf.value.trim().length > 0;
+        }
+
+        function showUserModal() {
+            const b = document.getElementById("usernameBackdrop");
+            if (!b) return;
+            b.style.display = "flex";
+            b.setAttribute("aria-hidden", "false");
+
+            const tbMain = document.getElementById("<%= tbUserName.ClientID %>");
+            const prompt = document.getElementById("tbUserPrompt");
+            if (prompt && tbMain && tbMain.value) prompt.value = tbMain.value;
+
+            setTimeout(() => { if (prompt) prompt.focus(); }, 10);
+            lockPageActions(true);
+        }
+
+        function hideUserModal() {
+            const b = document.getElementById("usernameBackdrop");
+            if (!b) return;
+            b.style.display = "none";
+            b.setAttribute("aria-hidden", "true");
+            lockPageActions(false);
+        }
+
+        function setErr(msg) {
+            const e = document.getElementById("userErr");
+            if (!e) return;
+            if (!msg) { e.style.display = "none"; e.textContent = ""; return; }
+            e.style.display = "block";
+            e.textContent = msg;
+        }
+
+        function lockPageActions(lock) {
+            const pub = document.getElementById("<%= btnPublish.ClientID %>");
+            if (pub) pub.disabled = lock;
+            document.querySelectorAll("button.action").forEach(b => b.disabled = lock);
+        }
+
+        function clearUser() {
+            deleteCookie(USER_COOKIE);
+            applyUserToPage("");
+            const prompt = document.getElementById("tbUserPrompt");
+            if (prompt) prompt.value = "";
+            setErr("");
+            showUserModal();
+        }
+
+        async function saveUser() {
+            const prompt = document.getElementById("tbUserPrompt");
+            let u = normalizeUser(prompt ? prompt.value : "");
+            if (!u) { setErr("Please enter a username (letters/numbers only)."); return; }
+
+            try {
+                setErr("");
+
+                // Sauve la session côté serveur
+                const data = await _origCallVoteAsmx("SetUserName", u);
+
+                if (!data || data.ok !== true) {
+                    setErr((data && data.error) ? data.error : "Unable to save username.");
+                    return;
+                }
+
+                // Sauve côté client
+                applyUserToPage(u);
+                setCookie(USER_COOKIE, u, 30);
+
+                hideUserModal();
+
+            } catch (e) {
+                console.error(e);
+                setErr("Server error while saving username.");
+            }
+        }
+
+        // Wrap callVoteAsmx to enforce username
+        const _origCallVoteAsmx = window.callVoteAsmx;
+
+        window.callVoteAsmx = async function(methodName, storyId) {
+            // IMPORTANT: on doit laisser SetUserName passer
+            if (!hasUser() && methodName !== "SetUserName") {
+                showUserModal();
+                throw new Error("Username required.");
+            }
+            return _origCallVoteAsmx(methodName, storyId);
+        };
+
+        function ensureUserBeforePublish() {
+            if (!hasUser()) { showUserModal(); return false; }
+            return true;
+        }
+        const USER_COOKIE = "sh_user";
+
+        function setCookie(name, value, days) {
+            const d = new Date();
+            d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
+            const expires = "expires=" + d.toUTCString();
+            document.cookie = name + "=" + encodeURIComponent(value) + ";" + expires + ";path=/;SameSite=Lax";
+        }
+
+        function getCookie(name) {
+            const n = name + "=";
+            const ca = document.cookie.split(';');
+            for (let i = 0; i < ca.length; i++) {
+                let c = ca[i].trim();
+                if (c.indexOf(n) === 0) return decodeURIComponent(c.substring(n.length, c.length));
+            }
+            return "";
+        }
+
+        function deleteCookie(name) {
+            document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;SameSite=Lax";
+        }
+
+        function applyUserToPage(u) {
+            const hf = document.getElementById("<%= hfUserName.ClientID %>");
+        const tbMain = document.getElementById("<%= tbUserName.ClientID %>");
+        if (hf) hf.value = u || "";
+        if (tbMain) tbMain.value = u || "";
+    }
+
+
+
+        document.addEventListener("DOMContentLoaded", async () => {
+
+            // 1) Si pas de username en hidden field, essaye cookie
+            if (!hasUser()) {
+                const cu = normalizeUser(getCookie(USER_COOKIE));
+
+                if (cu) {
+                    // applique au UI immédiatement
+                    applyUserToPage(cu);
+
+                    // restaure la Session côté serveur
+                    try {
+                        const data = await _origCallVoteAsmx("SetUserName", cu);
+                        if (data && data.ok === true) {
+                            lockPageActions(false);
+                            return; // tout est OK, pas besoin du modal
+                        }
+                    } catch (e) {
+                        console.error("Cookie user restore failed:", e);
+                    }
+
+                    // si ça échoue, on nettoie
+                    deleteCookie(USER_COOKIE);
+                    applyUserToPage("");
+                }
+
+                // 2) sinon, demande un username
+                showUserModal();
+            } else {
+                lockPageActions(false);
+            }
+
+            const pub = document.getElementById("<%= btnPublish.ClientID %>");
+          if (pub) {
+              pub.addEventListener("click", function (ev) {
+                  if (!ensureUserBeforePublish()) {
+                      ev.preventDefault();
+                      ev.stopPropagation();
+                  }
+              });
+          }
+      })
     </script>
 
     <!-- Footer -->
