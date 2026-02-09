@@ -2,13 +2,14 @@
 Imports System.Collections.Generic
 Imports System.Data.SqlClient
 Imports System.Linq
+Imports System.Runtime.InteropServices.ComTypes
 Imports System.Web.UI
 Imports System.Web.UI.WebControls
 
 Namespace StoryHub
 
     Partial Public Class Classement
-        Inherits System.Web.UI.Page
+        Inherits clsData
 
         Private Const SESSION_WINNERS As String = "SH_WINNERS"
 
@@ -49,7 +50,7 @@ Namespace StoryHub
             If Not IsPostBack Then
                 hfTopPeriod.Value = "WEEK"
                 SetTopButtonsActive("WEEK")
-                LoadTop3("WEEK")
+                'LoadTop3("WEEK")
                 EnsureSeedData()
 
 
@@ -65,6 +66,13 @@ Namespace StoryHub
                 ' garde l'état visuel au postback
                 SetTopButtonsActive(hfTopPeriod.Value)
             End If
+
+
+            Dim Myds As DataSet = ExecuteSQLds("s0009GetTempsRestant")
+            Dim restant As String = Myds.Tables(0).Rows(0)("TempsRestant")
+            lblTempsRestant.Text = restant
+
+
 
         End Sub
         Protected Sub btnTopWeek_Click(sender As Object, e As EventArgs)
@@ -134,8 +142,8 @@ Namespace StoryHub
                 If i < dt.Rows.Count Then
                     title = Convert.ToString(dt.Rows(i)("Title"))
                     author = Convert.ToString(dt.Rows(i)("Author"))
-                    category = Convert.ToString(dt.Rows(i)("Category"))
-                    votes = Convert.ToInt32(dt.Rows(i)("Votes"))
+                    category = ""
+                    votes = Convert.ToInt32(dt.Rows(i)("Likes"))
                 End If
 
                 Dim html As String = BuildTopCardHtml(i + 1, title, author, category, votes, False)
@@ -194,6 +202,15 @@ Namespace StoryHub
 
 
         Private Function GetTop3FromDb(startDate As DateTime, endDate As DateTime) As DataTable
+
+
+            Dim MyParam As New Collection
+            MyParam.Add(New Data.SqlClient.SqlParameter("@StartDate", startDate))
+            MyParam.Add(New Data.SqlClient.SqlParameter("@EndDate", endDate))
+            Dim Myds As DataSet = ExecuteSQLds("s0007GetTop3Stories", MyParam)
+
+            Return Myds.Tables(0)
+
             '            Dim sql As String =
             '"SELECT TOP 3
             '    s.Id,
@@ -344,12 +361,24 @@ Namespace StoryHub
         End Function
 
         Private Sub BindAll()
-            Dim stories = GetStories()
+
+            LoadTop3("WEEK")
+
+
+
+
+            Dim Myds As DataSet = ExecuteSQLds("s0008GetWinnerStories")
+
+            rptWinners.DataSource = Myds.Tables(0)
+            rptWinners.DataBind()
+
+
+            'Dim stories = GetStories()
 
             ' Périodes
-            Dim week = stories.Where(Function(s) s.Period = "WEEK").OrderByDescending(Function(s) s.Votes).FirstOrDefault()
-            Dim month = stories.Where(Function(s) s.Period = "MONTH").OrderByDescending(Function(s) s.Votes).FirstOrDefault()
-            Dim allp = stories.Where(Function(s) s.Period = "ALL").OrderByDescending(Function(s) s.Votes).FirstOrDefault()
+            'Dim week = stories.Where(Function(s) s.Period = "WEEK").OrderByDescending(Function(s) s.Votes).FirstOrDefault()
+            'Dim month = stories.Where(Function(s) s.Period = "MONTH").OrderByDescending(Function(s) s.Votes).FirstOrDefault()
+            'Dim allp = stories.Where(Function(s) s.Period = "ALL").OrderByDescending(Function(s) s.Votes).FirstOrDefault()
 
             'lblWeekVotes.Text = If(week Is Nothing, "0 votes", week.Votes.ToString() & " votes")
             'lblWeekWinner.Text = If(week Is Nothing, "—", week.Author)
@@ -361,12 +390,16 @@ Namespace StoryHub
             'lblAllWinner.Text = If(allp Is Nothing, "—", allp.Author)
 
             ' Top 3 (global sur tous les enregistrements disponibles ici)
-            Dim top3 = stories.OrderByDescending(Function(s) s.Votes).Take(3).ToList()
-            RenderTopPanels(top3)
+            'Dim top3 = stories.OrderByDescending(Function(s) s.Votes).Take(3).ToList()
+            'RenderTopPanels(top3)
 
             ' Liste gagnants
-            rptWinners.DataSource = stories.OrderByDescending(Function(s) s.Votes).ToList()
-            rptWinners.DataBind()
+            'rptWinners.DataSource = stories.OrderByDescending(Function(s) s.Votes).ToList()
+            'rptWinners.DataBind()
+
+
+
+
         End Sub
 
         Private Sub RenderTopPanels(top3 As List(Of WinnerStory))

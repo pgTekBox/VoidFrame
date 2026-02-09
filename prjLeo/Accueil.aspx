@@ -382,7 +382,7 @@
                     </div>
 
                     <div class="field">
-                        <label class="label" for="tbTitle">Title</label>
+                        <label class="label" for="tbTitle">Title (optional)</label>
                         <asp:TextBox ID="tbTitle"
                             runat="server"
                             CssClass="input"

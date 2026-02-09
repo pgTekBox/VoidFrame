@@ -24,6 +24,15 @@ Namespace StoryHub
         Protected WithEvents form1 As Global.System.Web.UI.HtmlControls.HtmlForm
 
         '''<summary>
+        '''Contrôle TestLabel.
+        '''</summary>
+        '''<remarks>
+        '''Champ généré automatiquement.
+        '''Pour modifier, déplacez la déclaration de champ du fichier de concepteur dans le fichier code-behind.
+        '''</remarks>
+        Protected WithEvents TestLabel As Global.System.Web.UI.WebControls.Label
+
+        '''<summary>
         '''Contrôle btnNavHome.
         '''</summary>
         '''<remarks>
@@ -40,6 +49,15 @@ Namespace StoryHub
         '''Pour modifier, déplacez la déclaration de champ du fichier de concepteur dans le fichier code-behind.
         '''</remarks>
         Protected WithEvents btnNavRank As Global.System.Web.UI.WebControls.Button
+
+        '''<summary>
+        '''Contrôle lblTempsRestant.
+        '''</summary>
+        '''<remarks>
+        '''Champ généré automatiquement.
+        '''Pour modifier, déplacez la déclaration de champ du fichier de concepteur dans le fichier code-behind.
+        '''</remarks>
+        Protected WithEvents lblTempsRestant As Global.System.Web.UI.WebControls.Label
 
         '''<summary>
         '''Contrôle hfTopPeriod.

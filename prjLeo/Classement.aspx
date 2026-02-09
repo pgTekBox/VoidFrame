@@ -654,7 +654,7 @@
 
 <body>
     <form id="form1" runat="server">
-
+        <asp:Label ID="TestLabel" runat="server" />
         <!-- Header -->
         <header>
             <div class="container py-4">
@@ -706,7 +706,7 @@
                 font-weight:900; font-size:20px; color:var(--gray-700);
                 box-shadow: var(--shadow-sm);
             ">
-                Temps restant: <span style="color:var(--amber-600);">3j 7h</span>
+                Temps restant: <span style="color:var(--amber-600);"><asp:Label ID="lblTempsRestant" EnableViewState="true" runat="server"    /></span>
             </span>
 
            
@@ -762,11 +762,7 @@
 
                         <div class="flex gap-4" style="align-items: flex-start;">
                             <div class="vote-col">
-                                <div class='vote-box <%# Eval("VoteBoxClass") %>'>
-                                    <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"></path>
-                                    </svg>
-                                </div>
+                                 
 
                                 <div class='vote-num <%# Eval("VoteNumClass") %>'><%# Eval("Votes") %></div>
 
@@ -781,7 +777,7 @@
 
                             <div style="flex: 1;">
                                 <div class="meta">
-                                    <span class='pill <%# Eval("PillClass") %>'><%# Eval("Category") %></span>
+                                     
                                     <span class="by">par <b><%# Eval("Author") %></b></span>
                                     <span class="time">• <%# Eval("RelativeTime") %></span>
                                 </div>
